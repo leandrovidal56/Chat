@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Chat Socket com Node</title>
+
+  <!-- CDN do jquery e do socket.io para estabelecer a comunicação -->>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.1/socket.io.min.js"></script>
+  
+  
+  <!-- link  da stylização do chat -->>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <h1>Chat com Socket em Node.js</h1>
+  <form id="chat">
+    <!-- Formulário do chat -->>
+    <!-- Primeiro input para informar o nome -->>
+    <input type="text" name="username" placeholder="Informe seu nome">
+    <!-- Onde vão ficar as mensagens -->>
+    <div class="messages"></div>
+    <!-- Input para informar a mensagem -->>
+    <input type="text" name="message" placeholder="Escreve a sua mensagem">
+    <!-- Butão para enviar a mensagem -->>
+    <button type="submit">Enviar</button>
+  </form>
+  <script type="text/javascript">
+    // conectar com o socket do back-end 
+    var socket = io('http://localhost:3000');
+
+    // função que recebe a mensagem e renderiza ela em tela 
+    function renderMessage(message) {
+      $('.messages').append('<div class="message"><strong>'+ message.author +'</strong>:'+ message.message +'</div>');
+    }
+    //ouvir evento que retorna as mensagens anteriores quando é conectado na aplicação
+    socket.on('previousMessages', function(messages) {
+      for (message of messages){ 
+        renderMessage(message);
+      }
+    });
+    // ouvir quando receber uma nova mensagem 
+    socket.on('receivedMessage', function(message) {
+      renderMessage(message);
+    });
+    // verificar quando o chat receber o submit 
+    $('#chat').submit(function(event) {
+      //
+      event.preventDefault();
+      // pegar o autor da mensagem e colocar em uma variável 
+      var author = $('input[name=username]').val();
+      // pegar a mensagem e colocar em uma variável 
+      var message = $('input[name=message]').val();
+      // verificação de term um username digitado e uma mensagem 
+      if(author.length && message.length) {
+        // criar objecto com autor e mensagem que vão ser enviados 
+        var messageObject = {
+          author: author,
+          message: message,
+        };
+        // chamar o renderMessage assimq que faz o envio 
+        renderMessage(messageObject);
+        // enviar o objeto 
+        socket.emit('sendMessage', messageObject);
+      }
+    });
+  </script>
+</body>
+</html>
